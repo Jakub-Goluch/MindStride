@@ -27,18 +27,16 @@ def play_random_video(folder_path):
 
 def main():
     root = tk.Tk()
-    root.title("Number Entry and Folder Explorer")
+    root.title("Mind-Stride Experiment")
+    root.geometry("800x500")
+    root.config(bg="#add8e6")
 
     folder_path = None
 
     def on_folder_button_click():
         nonlocal folder_path
         number = entry.get()
-        if number.isdigit():
-            print("Entered number:", number)
-            folder_path = open_folder_explorer()
-        else:
-            print("Please enter a valid number.")
+        folder_path = open_folder_explorer()
 
     def on_start_button_click():
         number = entry.get()
@@ -47,21 +45,21 @@ def main():
                 play_random_video(folder_path)
             root.destroy()
         else:
-            print("Please select a folder first.")
+            print("Please select a folder and number of trials first.")
 
     def close_program(event):
         root.destroy()
 
-    label = tk.Label(root, text="Enter a number:")
+    label = tk.Label(root, text="Enter a number of trials:", font=("Georgia", 16))
     label.pack()
 
-    entry = tk.Entry(root)
+    entry = tk.Entry(root, font=("Helvetica", 16))
     entry.pack()
 
-    folder_button = tk.Button(root, text="Open Folder Explorer", command=on_folder_button_click)
-    folder_button.pack()
+    folder_button = tk.Button(root, text="Select folder with videos", command=on_folder_button_click, width=30, height=3, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=70)
 
-    start_button = tk.Button(root, text="Start Program", command=on_start_button_click)
+    start_button = tk.Button(root, text="Start Program", command=on_start_button_click, width=30, height=3, font=("Georgia", 18), bg="#f5c969")
     start_button.pack()
 
     root.bind('<Escape>', close_program)
