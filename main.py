@@ -28,24 +28,53 @@ def play_random_video(folder_path):
 def main():
     root = tk.Tk()
     root.title("Mind-Stride Experiment")
-    root.geometry("800x500")
+    root.geometry("800x700")
     root.config(bg="#add8e6")
 
-    folder_path = None
+    folder_path_motor = None
+    folder_path_cross = None
+    folder_path_signal = None
+    folder_path_cue = None
+    folder_path_blank = None
 
-    def on_folder_button_click():
-        nonlocal folder_path
+    def on_folder_motor_button_click():
+        nonlocal folder_path_motor
         number = entry.get()
-        folder_path = open_folder_explorer()
+        folder_path_motor = open_folder_explorer()
+
+    def on_folder_cross_button_click():
+        nonlocal folder_path_cross
+        number = entry.get()
+        folder_path_cross = open_folder_explorer()
+
+    def on_folder_signal_button_click():
+        nonlocal folder_path_signal
+        number = entry.get()
+        folder_path_signal = open_folder_explorer()
+
+    def on_folder_cue_button_click():
+        nonlocal folder_path_cue
+        number = entry.get()
+        folder_path_cue = open_folder_explorer()
+
+    def on_folder_blank_button_click():
+        nonlocal folder_path_blank
+        number = entry.get()
+        folder_path_blank = open_folder_explorer()
 
     def on_start_button_click():
         number = entry.get()
-        if folder_path and number.isdigit():
+        if folder_path_motor and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank \
+                and number.isdigit():
             for i in range(int(number)):
-                play_random_video(folder_path)
+                play_random_video(folder_path_cross)
+                play_random_video(folder_path_signal)
+                play_random_video(folder_path_cue)
+                play_random_video(folder_path_motor)
+                play_random_video(folder_path_blank)
             root.destroy()
         else:
-            print("Please select a folder and number of trials first.")
+            print("Please select folders and number of trials first.")
 
     def close_program(event):
         root.destroy()
@@ -56,10 +85,29 @@ def main():
     entry = tk.Entry(root, font=("Helvetica", 16))
     entry.pack()
 
-    folder_button = tk.Button(root, text="Select folder with videos", command=on_folder_button_click, width=30, height=3, font=("Georgia", 18), bg="#f5c969")
-    folder_button.pack(pady=70)
+    folder_button = tk.Button(root, text="Select folder with videos of cross", command=on_folder_cross_button_click,
+                              width=40, height=2, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=12)
 
-    start_button = tk.Button(root, text="Start Program", command=on_start_button_click, width=30, height=3, font=("Georgia", 18), bg="#f5c969")
+    folder_button = tk.Button(root, text="Select folder with videos of beep and signal", command=on_folder_signal_button_click,
+                              width=40, height=2, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=12)
+
+    folder_button = tk.Button(root, text="Select folder with videos of cue",
+                              command=on_folder_cue_button_click,
+                              width=40, height=2, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=12)
+
+    folder_button = tk.Button(root, text="Select folder with videos of motor imaginery", command=on_folder_motor_button_click,
+                              width=40, height=2, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=12)
+
+    folder_button = tk.Button(root, text="Select folder with videos of blank",
+                              command=on_folder_blank_button_click,
+                              width=40, height=2, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=12)
+
+    start_button = tk.Button(root, text="Start Program", command=on_start_button_click, width=30, height=2, font=("Georgia", 18), bg="#f5c969")
     start_button.pack()
 
     root.bind('<Escape>', close_program)
