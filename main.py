@@ -3,7 +3,7 @@ from tkinter import filedialog
 import os
 import random
 from moviepy.editor import VideoFileClip
-
+import json
 
 def open_folder_explorer():
     foldername = filedialog.askdirectory(title="Select a folder")
@@ -12,18 +12,53 @@ def open_folder_explorer():
         return foldername
     return None
 
+def update_history(user_name, video_path):
+    history_file = f"{user_name}_history.json"
+    try:
+        if os.path.exists(history_file):
+            with open(history_file, 'r') as file:
+                history = json.load(file)
+        else:
+            history = []
+    except json.JSONDecodeError:
+        history = []
 
-def play_random_video(folder_path):
-    video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
+    history.append(video_path)
+
+    with open(history_file, 'w') as file:
+        json.dump(history, file, indent=4)
+
+
+def play_random_video(folder_path, user_name, is_cue_folder=False):
+    if is_cue_folder:
+        history = read_history(user_name)
+        video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv')) and os.path.join(folder_path, f) not in history]
+    else:
+        video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
+
     if video_files:
         video_filename = random.choice(video_files)
         video_path = os.path.join(folder_path, video_filename)
         print("Playing random video:", video_path)
         clip = VideoFileClip(video_path)
         clip.preview()
+        if is_cue_folder:
+            update_history(user_name, video_path)
     else:
-        print("No video files found in the selected folder.")
+        if is_cue_folder:
+            print("No new cue videos found in the selected folder. Consider resetting the user's history or selecting another folder.")
+        else:
+            print("No video files found in the selected folder.")
 
+def read_history(user_name):
+    history_file = f"{user_name}_history.json"
+    if os.path.exists(history_file):
+        with open(history_file, 'r') as file:
+            try:
+                return json.load(file)
+            except json.JSONDecodeError:
+                return []
+    return []
 
 def main():
     root = tk.Tk()
@@ -63,21 +98,27 @@ def main():
         folder_path_blank = open_folder_explorer()
 
     def on_start_button_click():
+        user_name = entry_name.get().strip()
         number = entry.get()
-        if folder_path_motor and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank \
-                and number.isdigit():
+        if user_name and folder_path_motor and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
             for i in range(int(number)):
-                play_random_video(folder_path_cross)
-                play_random_video(folder_path_signal)
-                play_random_video(folder_path_cue)
-                play_random_video(folder_path_motor)
-                play_random_video(folder_path_blank)
+                play_random_video(folder_path_cross, user_name)
+                play_random_video(folder_path_signal, user_name)
+                play_random_video(folder_path_cue, user_name, True)
+                play_random_video(folder_path_motor, user_name)
+                play_random_video(folder_path_blank, user_name)
             root.destroy()
         else:
-            print("Please select folders and number of trials first.")
+            print("Please enter your name, select folders, and number of trials first.")
 
     def close_program(event):
         root.destroy()
+
+    label_name = tk.Label(root, text="Enter your name:", font=("Georgia", 16))
+    label_name.pack()
+
+    entry_name = tk.Entry(root, font=("Helvetica", 16))
+    entry_name.pack()
 
     label = tk.Label(root, text="Enter a number of trials:", font=("Georgia", 16))
     label.pack()
