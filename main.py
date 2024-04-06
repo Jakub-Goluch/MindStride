@@ -5,6 +5,15 @@ import random
 from moviepy.editor import VideoFileClip
 import json
 
+NUMBER_OF_PLAYBACKS = None
+
+
+def determine_number_of_playbacks(folder_path):
+    video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
+    if video_files:
+        return len(video_files)
+    return 0
+    
 def open_folder_explorer():
     foldername = filedialog.askdirectory(title="Select a folder")
     if foldername:
@@ -12,43 +21,51 @@ def open_folder_explorer():
         return foldername
     return None
 
-def update_history(user_name, video_path):
+def update_history(user_name, video_name, count=1):
     history_file = f"{user_name}_history.json"
     try:
         if os.path.exists(history_file):
             with open(history_file, 'r') as file:
                 history = json.load(file)
         else:
-            history = []
+            history = {}
     except json.JSONDecodeError:
-        history = []
+        history = {}
 
-    history.append(video_path)
+    if video_name in history:
+        history[video_name] += count
+    else:
+        history[video_name] = count
 
     with open(history_file, 'w') as file:
         json.dump(history, file, indent=4)
 
 
 def play_random_video(folder_path, user_name, is_cue_folder=False):
-    if is_cue_folder:
-        history = read_history(user_name)
-        video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv')) and os.path.join(folder_path, f) not in history]
-    else:
-        video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
+    global NUMBER_OF_PLAYBACKS
+    played = False
+    history = read_history(user_name)
+    video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
 
-    if video_files:
-        video_filename = random.choice(video_files)
-        video_path = os.path.join(folder_path, video_filename)
-        print("Playing random video:", video_path)
-        clip = VideoFileClip(video_path)
-        clip.preview()
-        if is_cue_folder:
-            update_history(user_name, video_path)
-    else:
-        if is_cue_folder:
-            print("No new cue videos found in the selected folder. Consider resetting the user's history or selecting another folder.")
+    while not played:     
+        if video_files:
+            video_filename = random.choice(video_files)
+            if is_cue_folder and video_filename in history:
+                if history[video_filename] >= NUMBER_OF_PLAYBACKS:
+                    video_files.remove(video_filename)
+                    continue
+            video_path = os.path.join(folder_path, video_filename)
+            print("Playing random video:", video_path)
+            clip = VideoFileClip(video_path)
+            clip.preview()
+            if is_cue_folder:
+                update_history(user_name, video_filename)
+            played = True
         else:
-            print("No video files found in the selected folder.")
+            if is_cue_folder:
+                print("No new cue videos found in the selected folder. Consider resetting the user's history or selecting another folder.")
+            else:
+                print("No video files found in the selected folder.")
 
 def read_history(user_name):
     history_file = f"{user_name}_history.json"
@@ -57,8 +74,8 @@ def read_history(user_name):
             try:
                 return json.load(file)
             except json.JSONDecodeError:
-                return []
-    return []
+                return {}
+    return {}
 
 def main():
     root = tk.Tk()
@@ -98,9 +115,11 @@ def main():
         folder_path_blank = open_folder_explorer()
 
     def on_start_button_click():
+        global NUMBER_OF_PLAYBACKS
         user_name = entry_name.get().strip()
         number = entry.get()
         if user_name and folder_path_motor and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
+            NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue)
             for i in range(int(number)):
                 play_random_video(folder_path_cross, user_name)
                 play_random_video(folder_path_signal, user_name)
