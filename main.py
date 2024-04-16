@@ -1,11 +1,14 @@
 import tkinter as tk
 from tkinter import filedialog
+import time
 import os
 import random
 from moviepy.editor import VideoFileClip
 import json
+from data_json import BlockData, DataManager, ExperimentCue, MotorImageryTask
 
 NUMBER_OF_PLAYBACKS = None
+data_manager = DataManager()
 
 
 def determine_number_of_playbacks(folder_path, number_of_videos_in_trial):
@@ -63,12 +66,15 @@ def play_random_video(folder_path, user_name, is_cue_folder=False):
             if is_cue_folder:
                 update_history(user_name, video_filename)
             played = True
+            return video_filename
         else:
             if is_cue_folder:
                 print(
                     "No new cue videos found in the selected folder. Consider resetting the user's history or selecting another folder.")
             else:
                 print("No video files found in the selected folder.")
+
+            return None
 
 
 def read_history(user_name):
@@ -83,6 +89,7 @@ def read_history(user_name):
 
 
 def main():
+
     root = tk.Tk()
     root.title("Mind-Stride Experiment")
     root.geometry("800x700")
@@ -117,13 +124,30 @@ def main():
         global NUMBER_OF_PLAYBACKS
         user_name = entry_name.get().strip()
         number = entry.get()
+        # Inicjujemy czas
         if user_name and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
             NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue, int(number))
             for i in range(int(number)):
                 play_random_video(folder_path_cross, user_name)
                 play_random_video(folder_path_signal, user_name)
-                play_random_video(folder_path_cue, user_name, True)
+                # zapisz start time 1
+                start_time = time.time()
+                video_name = play_random_video(folder_path_cue, user_name, True)
+                end_time = time.time()
+
+                DataManager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.Cue.value,
+                                           activity=MotorImageryTask(video_name), eeg=[], trial_number=i + 1)
+
+                # zapisz end time 1
+                # zapisz moment z cue na True, a potem typ Motor Imagery
+                # zapisz start time 2
+                start_time = time.time()
                 play_random_video(folder_path_blank, user_name)
+                end_time = time.time()
+                DataManager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.TASK.value,
+                                           activity=MotorImageryTask(video_name), eeg=[], trial_number=i + 1)
+                # zapisz end time 2
+                # zapisz moment z cue na False, a potem typ Motor Imagery
             root.destroy()
         else:
             print("Please enter your name, select folders, and number of trials first.")
