@@ -6,9 +6,11 @@ import random
 from moviepy.editor import VideoFileClip
 import json
 from data_json import DataManager, ExperimentCue
+from HistoryManager import HistoryManager
 
 NUMBER_OF_PLAYBACKS = None
 data_manager = DataManager()
+user_history: HistoryManager
 
 
 def determine_number_of_playbacks(folder_path, number_of_videos_in_trial):
@@ -26,30 +28,11 @@ def open_folder_explorer():
     return None
 
 
-def update_history(user_name, video_name, count=1):
-    history_file = f"{user_name}_history.json"
-    try:
-        if os.path.exists(history_file):
-            with open(history_file, 'r') as file:
-                history = json.load(file)
-        else:
-            history = {}
-    except json.JSONDecodeError:
-        history = {}
-
-    if video_name in history:
-        history[video_name] += count
-    else:
-        history[video_name] = count
-
-    with open(history_file, 'w') as file:
-        json.dump(history, file, indent=4)
-
-
-def play_random_video(folder_path, user_name, is_cue_folder=False):
+def play_random_video(folder_path, is_cue_folder=False):
     global NUMBER_OF_PLAYBACKS
+    global user_history
     played = False
-    history = read_history(user_name)
+    history = user_history.read_history()
     video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
 
     while not played:
@@ -64,7 +47,7 @@ def play_random_video(folder_path, user_name, is_cue_folder=False):
             clip = VideoFileClip(video_path)
             clip.preview()
             if is_cue_folder:
-                update_history(user_name, video_filename)
+                user_history.update_history(video_filename)
             played = True
             return video_filename
         else:
@@ -77,19 +60,7 @@ def play_random_video(folder_path, user_name, is_cue_folder=False):
             return None
 
 
-def read_history(user_name):
-    history_file = f"{user_name}_history.json"
-    if os.path.exists(history_file):
-        with open(history_file, 'r') as file:
-            try:
-                return json.load(file)
-            except json.JSONDecodeError:
-                return {}
-    return {}
-
-
 def main():
-
     root = tk.Tk()
     root.title("Mind-Stride Experiment")
     root.geometry("800x700")
@@ -122,28 +93,33 @@ def main():
 
     def on_start_button_click():
         global NUMBER_OF_PLAYBACKS
+        global user_history
         user_name = entry_name.get().strip()
         number = entry.get()
+        user_history = HistoryManager(user_name)
         if user_name and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
             NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue, int(number))
             for i in range(int(number)):
-                play_random_video(folder_path_cross, user_name)
-                play_random_video(folder_path_signal, user_name)
+                play_random_video(folder_path_cross)
+                play_random_video(folder_path_signal)
                 start_time = time.time()
-                video_name = play_random_video(folder_path_cue, user_name, True)
+                video_name = play_random_video(folder_path_cue, True)
                 end_time = time.time()
 
-                data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.CUE.value,
-                                           activity=video_name, trial_number=i + 1)
+                data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time,
+                                            cue=ExperimentCue.CUE.value,
+                                            activity=video_name, trial_number=i + 1)
 
                 # podczas blank sa odrazy testy wykonania motor imagery dla uzytkownika ?
                 start_time = time.time()
-                play_random_video(folder_path_blank, user_name)
+                play_random_video(folder_path_blank)
                 end_time = time.time()
-                data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.TASK.value,
-                                           activity=video_name, trial_number=i + 1)
+                data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time,
+                                            cue=ExperimentCue.TASK.value,
+                                            activity=video_name, trial_number=i + 1)
 
             data_manager.to_save("wynik-test")
+            user_history.save_history()
             root.destroy()
         else:
             print("Please enter your name, select folders, and number of trials first.")
