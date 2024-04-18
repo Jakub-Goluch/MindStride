@@ -5,7 +5,7 @@ import os
 import random
 from moviepy.editor import VideoFileClip
 import json
-from data_json import BlockData, DataManager, ExperimentCue, MotorImageryTask
+from data_json import DataManager, ExperimentCue
 
 NUMBER_OF_PLAYBACKS = None
 data_manager = DataManager()
@@ -124,30 +124,26 @@ def main():
         global NUMBER_OF_PLAYBACKS
         user_name = entry_name.get().strip()
         number = entry.get()
-        # Inicjujemy czas
         if user_name and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
             NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue, int(number))
             for i in range(int(number)):
                 play_random_video(folder_path_cross, user_name)
                 play_random_video(folder_path_signal, user_name)
-                # zapisz start time 1
                 start_time = time.time()
                 video_name = play_random_video(folder_path_cue, user_name, True)
                 end_time = time.time()
 
-                DataManager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.Cue.value,
-                                           activity=MotorImageryTask(video_name), eeg=[], trial_number=i + 1)
+                data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.CUE.value,
+                                           activity=video_name, trial_number=i + 1)
 
-                # zapisz end time 1
-                # zapisz moment z cue na True, a potem typ Motor Imagery
-                # zapisz start time 2
+                # podczas blank sa odrazy testy wykonania motor imagery dla uzytkownika ?
                 start_time = time.time()
                 play_random_video(folder_path_blank, user_name)
                 end_time = time.time()
-                DataManager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.TASK.value,
-                                           activity=MotorImageryTask(video_name), eeg=[], trial_number=i + 1)
-                # zapisz end time 2
-                # zapisz moment z cue na False, a potem typ Motor Imagery
+                data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time, cue=ExperimentCue.TASK.value,
+                                           activity=video_name, trial_number=i + 1)
+
+            data_manager.to_save("wynik-test")
             root.destroy()
         else:
             print("Please enter your name, select folders, and number of trials first.")

@@ -20,6 +20,7 @@ class ExperimentCue(Enum):
     TASK = False
 
 
+#klasa narazie zbedna, brak polaczenia z urzadzeniem
 @dataclass_json
 @dataclass
 class EEGSignal:
@@ -55,9 +56,10 @@ class BlockData:
 class DataManager:
     def __init__(self):
         self.list_of_data = None
-        # self.trial_number = 0
 
-    def to_save(self, name, trial_data):
+    def to_save(self, name, trial_data= None):
+        if not trial_data:
+            trial_data = self.list_of_data
         with open(name, "w") as f:
             json.dump([data for data in trial_data], f, indent=4)
 
@@ -69,26 +71,26 @@ class DataManager:
             item_dict = json.loads(item)
             print(json.dumps(item_dict, indent=4))
 
-    def input_data(self, person: str, time_start: float, time_end: float, cue: ExperimentCue, activity: MotorImageryTask):
-        return BlockData(person, time_start, time_end, cue, activity).to_json()
+    def input_data(self, person: str, time_start: float, time_end: float, cue: ExperimentCue, activity: MotorImageryTask, trial_number):
+        return BlockData(person, time_start, time_end, cue, activity, trial_number).to_json()  #Block Data zawiera metadane, bez samego eeg
 
     def create_dataset(self, person: str, time_start: float, time_end: float, cue: ExperimentCue,
-                       activity: MotorImageryTask, trial_number: int, list_of_data: list = None) -> list:
-        if list_of_data is None:
+                       activity, trial_number: int) -> list:
+        if self.list_of_data is None:
             self.list_of_data = []
 
-        list_of_data.append(self.input_data(person, time_start, time_end, cue, activity, eeg))
+        self.list_of_data.append(self.input_data(person, time_start, time_end, cue, self.changeto_enum(activity), trial_number))
 
-        return list_of_data
+        return self.list_of_data # po co returnowac to tu ??
 
     def changeto_enum(self, video_name):
-        if video_name.startswith("Lewa_scisk"):
-            return 3
-        elif video_name.startswith("Lewa"):
-            return 4
-        elif video_name.startswith("Prawa_scisk"):
-            return 1
-        elif video_name.startswith("Prawa"):
-            return 2
+        if video_name.startswith("Left_Squeeze"):
+            return MotorImageryTask.LEFT_HAND_SQUEEZE
+        elif video_name.startswith("Left"):
+            return MotorImageryTask.LEFT_HAND_WAVE
+        elif video_name.startswith("Right_Squeeze"):
+            return MotorImageryTask.RIGHT_HAND_SQUEEZE
+        elif video_name.startswith("Right"):
+            return MotorImageryTask.RIGHT_HAND_WAVE
         else:
-            return 5
+            return MotorImageryTask.JAW
