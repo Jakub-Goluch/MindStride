@@ -1,3 +1,4 @@
+import threading
 import tkinter as tk
 from tkinter import filedialog
 import time
@@ -7,6 +8,7 @@ from moviepy.editor import VideoFileClip
 import json
 from data_json import DataManager, ExperimentCue
 from HistoryManager import HistoryManager
+import udpStreaming
 
 NUMBER_OF_PLAYBACKS = None
 data_manager = DataManager()
@@ -99,6 +101,13 @@ def main():
         number = entry.get()
         user_history = HistoryManager(user_name)
         if user_name and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
+            
+            path = f"{user_name}_data"
+
+            # Start UDP streaming in a separate thread
+            udp_thread = threading.Thread(target=udpStreaming.listen_udp, args=("/"+user_name)) #Add correct path
+            udp_thread.start()  
+        
             NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue, int(number))
             for i in range(int(number)):
                 play_random_video(folder_path_cross)
