@@ -1,9 +1,8 @@
-from random import uniform, randint
+import os
 from typing import List
 from enum import Enum
 from dataclasses import dataclass
 import json
-from pprint import pprint
 from dataclasses_json import dataclass_json
 
 
@@ -57,11 +56,17 @@ class DataManager:
     def __init__(self):
         self.list_of_data = None
 
-    def to_save(self, name, trial_data= None):
+    def to_save(self, folder_name, file_name, trial_data=None):
         if not trial_data:
             trial_data = self.list_of_data
-        with open(name, "w") as f:
-            json.dump([data for data in trial_data], f, indent=4)
+
+        if not os.path.exists(folder_name):
+            os.makedirs(folder_name)
+
+        file_path = os.path.join(folder_name, file_name)
+
+        with open(file_path, "w") as f:
+            json.dump(trial_data, f, indent=4)
 
     def to_open(self, name):
         with open(name, 'r') as file:
@@ -72,16 +77,16 @@ class DataManager:
             print(json.dumps(item_dict, indent=4))
 
     def input_data(self, person: str, time_start: float, time_end: float, cue: ExperimentCue, activity: MotorImageryTask, trial_number):
-        return BlockData(person, time_start, time_end, cue, activity, trial_number).to_json()  #Block Data zawiera metadane, bez samego eeg
+        # Block Data zawiera metadane, bez samego eeg
+        return BlockData(person, time_start, time_end, cue, activity, trial_number).to_json()
 
     def create_dataset(self, person: str, time_start: float, time_end: float, cue: ExperimentCue,
                        activity, trial_number: int) -> list:
         if self.list_of_data is None:
             self.list_of_data = []
 
-        self.list_of_data.append(self.input_data(person, time_start, time_end, cue, self.changeto_enum(activity), trial_number))
-
-        return self.list_of_data # po co returnowac to tu ??
+        self.list_of_data.append(self.input_data(person, time_start, time_end,
+                                 cue, self.changeto_enum(activity), trial_number))
 
     def changeto_enum(self, video_name):
         if video_name.startswith("Left_Squeeze"):

@@ -95,6 +95,7 @@ def main():
         global NUMBER_OF_PLAYBACKS
         global user_history
         user_name = entry_name.get().strip()
+        user_id = entry_user_id.get().strip()
         number = entry.get()
         user_history = HistoryManager(user_name)
         if user_name and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
@@ -118,7 +119,7 @@ def main():
                                             cue=ExperimentCue.TASK.value,
                                             activity=video_name, trial_number=i + 1)
 
-            data_manager.to_save("wynik-test")
+            data_manager.to_save(folder_name=user_id, file_name="wynik-test")
             user_history.save_history()
             root.destroy()
         else:
@@ -132,6 +133,12 @@ def main():
 
     entry_name = tk.Entry(root, font=("Helvetica", 16))
     entry_name.pack()
+
+    label_user_id = tk.Label(root, text="Enter user id:", font=("Georgia", 16))
+    label_user_id.pack()
+
+    entry_user_id = tk.Entry(root, font=("Helvetica", 16))
+    entry_user_id.pack()
 
     label = tk.Label(root, text="Enter a number of trials:", font=("Georgia", 16))
     label.pack()
