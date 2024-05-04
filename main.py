@@ -10,6 +10,7 @@ from data_json import DataManager, ExperimentCue
 from HistoryManager import HistoryManager
 import udpStreaming
 
+
 NUMBER_OF_PLAYBACKS = None
 data_manager = DataManager()
 user_history: HistoryManager
@@ -23,7 +24,7 @@ def determine_number_of_playbacks(folder_path, number_of_videos_in_trial):
 
 
 def open_folder_explorer():
-    foldername = filedialog.askdirectory(title="Select a folder")
+    foldername = filedialog.askdirectory(title="Select a folder", initialdir=os.getcwd())
     if foldername:
         print("Selected folder:", foldername)
         return foldername
@@ -60,6 +61,21 @@ def play_random_video(folder_path, is_cue_folder=False):
                 print("No video files found in the selected folder.")
 
             return None
+        
+def play_task_video(folder_path, cue_name):
+    video_files = [f for f in os.listdir(folder_path) if f.endswith(('.mp4', '.avi', '.mkv'))]
+    if video_files:
+        for video_filename in video_files:
+            if video_filename.split("-")[0] == cue_name:
+                break
+        video_path = os.path.join(folder_path, video_filename)
+        print("Playing task video:", video_path)
+        clip = VideoFileClip(video_path)
+        clip.preview()
+        return video_filename
+    else:
+        print("No video files found in the selected folder.")
+        return None
 
 
 def main():
@@ -71,6 +87,7 @@ def main():
     folder_path_cross = None
     folder_path_signal = None
     folder_path_cue = None
+    folder_path_task = None
     folder_path_blank = None
 
     def on_folder_cross_button_click():
@@ -93,19 +110,24 @@ def main():
         number = entry.get()
         folder_path_blank = open_folder_explorer()
 
+    def on_folder_task_button_click():
+        nonlocal folder_path_task
+        number = entry.get()
+        folder_path_task = open_folder_explorer()
+
     def on_start_button_click():
         global NUMBER_OF_PLAYBACKS
         global user_history
         user_name = entry_name.get().strip()
         user_id = entry_user_id.get().strip()
         number = entry.get()
-        user_history = HistoryManager(user_name)
+        user_history = HistoryManager(user_name + "_" + user_id)
         if user_name and folder_path_cross and folder_path_signal and folder_path_cue and folder_path_blank and number.isdigit():
             
             path = f"{user_name}_data"
 
             # Start UDP streaming in a separate thread
-            udp_thread = threading.Thread(target=udpStreaming.listen_udp, args=("/"+user_name)) #Add correct path
+            udp_thread = threading.Thread(target=udpStreaming.listen_udp, args=("/"+user_name + "_" + user_id,user_name,user_id,)) #Add correct path
             udp_thread.start()  
         
             NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue, int(number))
@@ -120,16 +142,21 @@ def main():
                                             cue=ExperimentCue.CUE.value,
                                             activity=video_name, trial_number=i + 1)
 
-                # podczas blank sa odrazy testy wykonania motor imagery dla uzytkownika ?
+               
                 start_time = time.time()
-                play_random_video(folder_path_blank)
+                cue_name = video_name.split("-")[0]
+                video_name = play_task_video(folder_path_task, cue_name)
                 end_time = time.time()
+
                 data_manager.create_dataset(user_name, time_start=start_time, time_end=end_time,
                                             cue=ExperimentCue.TASK.value,
                                             activity=video_name, trial_number=i + 1)
+                
+                play_random_video(folder_path_blank)
 
-            data_manager.to_save(folder_name=user_id, file_name="wynik-test")
-            user_history.save_history()
+            data_manager.to_save(folder_name=user_name + "_" + user_id, file_name="wynik-test")
+            user_history.save_history(user_id)
+            udpStreaming.stop_recording()
             root.destroy()
         else:
             print("Please enter your name, select folders, and number of trials first.")
@@ -167,6 +194,11 @@ def main():
     folder_button = tk.Button(root, text="Select folder with videos of cue",
                               command=on_folder_cue_button_click,
                               width=40, height=2, font=("Georgia", 18), bg="#f5c969")
+    folder_button.pack(pady=12)
+
+    folder_button = tk.Button(root, text="Select folder with videos of task",
+                                command=on_folder_task_button_click,
+                                width=40, height=2, font=("Georgia", 18), bg="#f5c969")
     folder_button.pack(pady=12)
 
     folder_button = tk.Button(root, text="Select folder with videos of blank",

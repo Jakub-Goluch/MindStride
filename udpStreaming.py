@@ -1,6 +1,7 @@
 import socket
 import os
 import struct
+import threading
 import warnings
 from tkinter import messagebox
 
@@ -10,15 +11,24 @@ IP = "127.0.0.1"
 PORT = 1000
 TIMEOUT = 5 # in seconds
 BUFFER_SIZE = 68
-isRecording = False
+isRecording = threading.Event()
 
 def stop_recording():
-    global isRecording
-    isRecording = False
+    isRecording.clear()
 
-def listen_udp(full_path):
-    global isRecording
-    isRecording = True
+def listen_udp(full_path, user_name, user_id):
+    isRecording.set()
+    save_index = 1
+    full_path = f"{os.getcwd()}{full_path}"
+    print(full_path)
+    if not os.path.exists(full_path):
+        os.makedirs(full_path)
+
+    while os.path.exists(f"{full_path}-{save_index}.csv"):
+        save_index += 1
+    
+    full_path = f"{full_path}/{user_name}_{user_id}-{save_index}"
+
     file = open(f"{full_path}.csv", "wb+")
 
     try:
@@ -34,7 +44,7 @@ def listen_udp(full_path):
         # timer = Timer()
 
         # Acquisition loop
-        while isRecording: 
+        while isRecording.is_set(): 
             number_of_bytes_received, _ = udp_socket.recvfrom_into(receive_buffer_byte)
             # # timer.print_stopwatch()
             if number_of_bytes_received == BUFFER_SIZE:
