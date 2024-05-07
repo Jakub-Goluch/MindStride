@@ -64,9 +64,21 @@ class DataManager:
             os.makedirs(folder_name)
 
         file_path = os.path.join(folder_name, file_name)
+        current_data = []
 
-        with open(file_path, "w") as f:
-            json.dump(trial_data, f, indent=4)
+        # Check if the file already exists and load its content
+        if os.path.exists(file_path):
+            with open(file_path, "r") as file:
+                try:
+                    current_data = json.load(file)
+                except json.JSONDecodeError:
+                    current_data = []
+
+        current_data.extend(trial_data)
+
+        # Save the updated data back to the file
+        with open(file_path, "w") as file:
+            json.dump(current_data, file, indent=4)
 
     def to_open(self, name):
         with open(name, 'r') as file:

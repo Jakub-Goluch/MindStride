@@ -127,7 +127,7 @@ def main():
             path = f"{user_name}_data"
 
             # Start UDP streaming in a separate thread
-            udp_thread = threading.Thread(target=udpStreaming.listen_udp, args=("/"+user_name + "_" + user_id,user_name,user_id,)) #Add correct path
+            udp_thread = threading.Thread(target=udpStreaming.listen_udp, args=("/"+user_name + "_" + user_id,user_name,user_id,)) 
             udp_thread.start()  
         
             NUMBER_OF_PLAYBACKS = determine_number_of_playbacks(folder_path_cue, int(number))
@@ -153,6 +153,12 @@ def main():
                                             activity=video_name, trial_number=i + 1)
                 
                 play_random_video(folder_path_blank)
+
+                history = user_history.read_history()
+
+                if all(value >= NUMBER_OF_PLAYBACKS for value in history.values()):
+                    print("All videos have been played the required number of times.")
+                    break
 
             data_manager.to_save(folder_name=user_name + "_" + user_id, file_name="wynik-test")
             user_history.save_history(user_id)
