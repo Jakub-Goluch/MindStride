@@ -47,9 +47,9 @@ def listen_udp(full_path, user_name, user_id):
         while isRecording.is_set(): 
             number_of_bytes_received, _ = udp_socket.recvfrom_into(receive_buffer_byte)
             # # timer.print_stopwatch()
-            if number_of_bytes_received == BUFFER_SIZE:
+            if number_of_bytes_received > 0:
                 message_byte = receive_buffer_byte[:number_of_bytes_received]
-                # unpacked_data = struct.unpack('17f', message_byte)
+
                 file.write(message_byte)
 
 
@@ -62,4 +62,4 @@ def listen_udp(full_path, user_name, user_id):
 
 
 if __name__ == "__main__":
-    listen_udp("test")
+    listen_udp("test", "A","1")
