@@ -127,7 +127,7 @@ The total number of columns is calculated as follows:
 - Frequency bands: 7
 - Classes per frequency band: 5
 - Components per class: 2
-- Plus 1 activity column
+- Plus 1 activity column (Default convention is {0:'NO ACTIVITY',1: 'LeftHand', 2: 'RightHand', 3: 'Jaw', 4: 'LeftHandClench', 5: 'RightHandClench'})
 
 
 This results in a total of 71 columns in the transformed CSP CSV data.
