@@ -129,8 +129,5 @@ The total number of columns is calculated as follows:
 - Components per class: 2
 - Plus 1 activity column
 
-So, the total number of columns is:
-
-\[ 7 \text{ frequency bands} \times 5 \text{ classes per band} \times 2 \text{ components per class} + 1 \text{ activity column} = 71 \text{ columns} \]
 
 This results in a total of 71 columns in the transformed CSP CSV data.
