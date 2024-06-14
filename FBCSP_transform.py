@@ -102,7 +102,7 @@ def process_and_transform_folder(input_folder, output_folder, model_file, n_comp
                 transformed_data = transform_data_with_csp(data, labels, csp_models, n_components)
 
                 relative_path = os.path.relpath(file_path, input_folder)
-                output_file_path = os.path.join(output_folder, relative_path).replace('.csv', f'.{"h5" if data_format == "2d" else "csv"}')
+                output_file_path = os.path.join(output_folder, relative_path).replace('.csv', f'.{"h5" if data_format == "3d" else "csv"}')
                 os.makedirs(os.path.dirname(output_file_path), exist_ok=True)
                 save_transformed_data(transformed_data, labels, output_file_path, freq_band_names, classStandard, n_components, data_format)
                 print(f"Transformed data saved to: {output_file_path}")
@@ -117,7 +117,7 @@ def process_and_transform_folder(input_folder, output_folder, model_file, n_comp
     for user, data_frames in user_data_map.items():
         user_cumulative_data = np.concatenate([data for data, _ in data_frames], axis=0)
         user_cumulative_labels = np.concatenate([labels for _, labels in data_frames], axis=0)
-        user_cumulative_file = os.path.join(output_folder, user, f'{user}_cumulative.{"h5" if data_format == "2d" else "csv"}')
+        user_cumulative_file = os.path.join(output_folder, user, f'{user}_cumulative.{"h5" if data_format == "3d" else "csv"}')
         os.makedirs(os.path.dirname(user_cumulative_file), exist_ok=True)
         save_transformed_data(user_cumulative_data, user_cumulative_labels, user_cumulative_file, freq_band_names, classStandard, n_components, data_format)
         print(f"Cumulative data saved for user {user} to: {user_cumulative_file}")
@@ -125,7 +125,7 @@ def process_and_transform_folder(input_folder, output_folder, model_file, n_comp
     if cumulative_data_all:
         cumulative_data = np.concatenate([data for data, _ in cumulative_data_all], axis=0)
         cumulative_labels = np.concatenate([labels for _, labels in cumulative_data_all], axis=0)
-        cumulative_file_all = os.path.join(output_folder, f'cumulative_all_users.{"h5" if data_format == "2d" else "csv"}')
+        cumulative_file_all = os.path.join(output_folder, f'cumulative_all_users.{"h5" if data_format == "3d" else "csv"}')
         save_transformed_data(cumulative_data, cumulative_labels, cumulative_file_all, freq_band_names, classStandard, n_components, data_format)
         print(f"Cumulative data for all users saved to: {cumulative_file_all}")
 
@@ -135,7 +135,7 @@ def main():
     parser.add_argument('--output_dir', type=str, required=True, help="Path to the output data directory.")
     parser.add_argument('--model_file', type=str, required=True, help="Path to the trained CSP model file.")
     parser.add_argument('--n_components', type=int, default=4, help="Number of CSP components to use.")
-    parser.add_argument('--data_format', type=str, choices=['1d', '2d'], default='1d', help="Format of the output data: '1d' for one-dimensional vector or '2d' for two-dimensional vector.")
+    parser.add_argument('--data_format', type=str, choices=['1d', '3d'], default='1d', help="Format of the output data: '1d' for one-dimensional vector or '3d' for three-dimensional vector.")
     args = parser.parse_args()
 
     process_and_transform_folder(args.input_dir, args.output_dir, args.model_file, args.n_components, args.data_format)
