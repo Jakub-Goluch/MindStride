@@ -1,3 +1,4 @@
+import os 
 import pandas as pd
 import h5py
 import numpy as np
@@ -11,6 +12,7 @@ def read_csv_data(file_path):
     return transformed_data, labels
 
 def read_hdf5_data(file_path):
+    file_path = os.path.abspath(file_path)
     with h5py.File(file_path, 'r') as f:
         data = f['data'][:]
         labels = f['labels'][:]
@@ -33,12 +35,12 @@ def display_2d_structure(data, labels, n_components, freq_band_names, classStand
                 print(f"  Class: {class_name} - Components: [None]")
 
 def main():
-    csv_file_path = './FBCSP/Datasets_FBCSP_4Components/data_konrad/data_konrad_cumulative.csv'
-    hdf5_file_path = './FBCSP/Datasets_FBCSP_4Components_2D/data_konrad/data_konrad_cumulative.h5'
+    # csv_file_path = './FBCSP/Datasets_FBCSP_4Components/data_konrad/data_konrad_cumulative.csv'
+    hdf5_file_path = './FBCSP/Datasets_FBCSP_4Components_3D/data_konrad/data_konrad_cumulative.h5'
 
-    csv_data, csv_labels = read_csv_data(csv_file_path)
-    print(f"CSV Transformed Data Shape: {csv_data.shape}")
-    print(f"CSV Labels Shape: {csv_labels.shape}")
+    # csv_data, csv_labels = read_csv_data(csv_file_path)
+    # print(f"CSV Transformed Data Shape: {csv_data.shape}")
+    # print(f"CSV Labels Shape: {csv_labels.shape}")
 
     hdf5_data, hdf5_labels = read_hdf5_data(hdf5_file_path)
     print(f"HDF5 Transformed Data Shape: {hdf5_data.shape}")
